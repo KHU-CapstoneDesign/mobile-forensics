@@ -34,5 +34,14 @@ public class WebController {
     }
 
     // 사용자 정보가 따로 반환되었으니, 프론트에서는 유저 아이디를 쿠키에 저장한다.
+    // 그리고 사용자가 배치파일을 다운로드할 수 있도록 다시 한 번 배치파일에 대한 정보를 요청한다.
+    @GetMapping("/batch")
+    public ResponseEntity<String> serveBatchFile() {
+        String filePath = "/static/example_batch.bat";
+        return new ResponseEntity<>(filePath, HttpStatusCode.valueOf(200));
+    }
+
     // 배치파일로부터 파일 전송 받는 즉시 프론트에 알림
+
+
 }
