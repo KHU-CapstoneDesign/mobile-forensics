@@ -24,7 +24,7 @@ public class WebService {
         return saved.toString();
     }
 
-    public void sendNotificationStart(){
+    public ResponseEntity<String> sendNotificationStart(){
         String url = "http://frontend-server.com/api/notify-start";
         RestTemplate restTemplate = new RestTemplate();
 
@@ -37,9 +37,10 @@ public class WebService {
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 
         log.info("Notification sent to frontend: " + response.getStatusCode());
+        return response;
     }
 
-    public void sendNotificationEnd(){
+    public ResponseEntity<String> sendNotificationEnd(){
         String url = "http://frontend-server.com/api/notify-end";
         RestTemplate restTemplate = new RestTemplate();
 
@@ -52,6 +53,7 @@ public class WebService {
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 
         log.info("Notification sent to frontend: " + response.getStatusCode());
+        return response;
     }
 
 
