@@ -1,18 +1,16 @@
 package com.capstone_design.mobile_forensics.log.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity @Table(name = "picture_taken_log")
-@Builder @RequiredArgsConstructor
+@Builder @AllArgsConstructor @NoArgsConstructor
 @ToString
 public class TakenPictureLog implements LogEntityEntry {
 
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long logId;
 
     private String tag;

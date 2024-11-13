@@ -1,24 +1,22 @@
 package com.capstone_design.mobile_forensics.log.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity @Table(name = "wifi")
-@Builder @RequiredArgsConstructor
+@Builder @AllArgsConstructor @NoArgsConstructor
 @ToString
 public class WifiLog implements LogEntityEntry{
 
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long logId;
 
-    private String SSID;
-    private String BSSID;
-    private String Latitude;
-    private String Longitude;
+    private String ssid;
+    private String bssid;
+    private String latitude;
+    private String longitude;
 
     private LocalDateTime timestamp;
 }
