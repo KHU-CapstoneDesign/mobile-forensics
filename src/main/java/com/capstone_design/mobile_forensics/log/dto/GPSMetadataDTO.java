@@ -10,9 +10,12 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor @NoArgsConstructor
 public class GPSMetadataDTO implements LogEntry {
-
-    private String Latitude;
-    private String Longitude;
+    /*
+    * <latitude - 위도> 37.123456 N
+    * <longitude - 경도> 127.123456 E
+    * */
+    private String latitude;
+    private String longitude;
     private LocalDateTime timestamp;
 
     @Override
@@ -22,8 +25,8 @@ public class GPSMetadataDTO implements LogEntry {
 
     public GPSMetadata toEntity() {
         return GPSMetadata.builder()
-                .Latitude(Latitude)
-                .Longitude(Longitude)
+                .latitude(latitude)
+                .longitude(longitude)
                 .timestamp(timestamp)
                 .build();
     }

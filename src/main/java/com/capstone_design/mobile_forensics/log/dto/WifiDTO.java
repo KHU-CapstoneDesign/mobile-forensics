@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WifiDTO implements LogEntry {
-    private String SSID;
-    private String BSSID;
-    private String Latitude;
-    private String Longitude;
+    private String ssid;
+    private String bssid;
+    private String latitude;
+    private String longitude;
     private LocalDateTime timestamp;
 
     @Override
@@ -24,10 +24,10 @@ public class WifiDTO implements LogEntry {
 
     public WifiLog toEntity() {
         return WifiLog.builder()
-                .SSID(SSID)
-                .BSSID(BSSID)
-                .Latitude(Latitude)
-                .Longitude(Longitude)
+                .ssid(ssid)
+                .bssid(bssid)
+                .latitude(latitude)
+                .longitude(longitude)
                 .timestamp(timestamp)
                 .build();
 
