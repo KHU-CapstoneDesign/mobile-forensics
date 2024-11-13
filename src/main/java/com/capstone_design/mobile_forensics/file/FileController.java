@@ -21,7 +21,7 @@ public class FileController {
     private FileService fileService;
 
     @PostMapping("/signal")
-    public ResponseEntity<String> handleSignal(@RequestBody String signal) {
+    public ResponseEntity<String> handleSignal(@RequestParam String signal) {
         ResponseEntity res = fileService.signal(signal);
         return res;
     }

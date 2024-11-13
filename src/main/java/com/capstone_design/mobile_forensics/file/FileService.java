@@ -1,5 +1,6 @@
 package com.capstone_design.mobile_forensics.file;
 
+import com.capstone_design.mobile_forensics.log.LogProcessService;
 import com.capstone_design.mobile_forensics.log.LogProcessServiceImpl;
 import com.capstone_design.mobile_forensics.web.WebService;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,7 @@ public class FileService {
     @Autowired
     private WebService webService;
     @Autowired
-    private LogProcessServiceImpl logService;
+    private LogProcessService logService;
     @Autowired
     private ImageFileRepository imageRepository;
 
@@ -40,7 +41,7 @@ public class FileService {
 
     public ResponseEntity fileUpload(MultipartFile file) throws IOException {
         String fileName = file.getOriginalFilename();
-        log.info("File received.\nFile Name = {}", fileName);
+        log.info("File received.\tFile Name = {}", fileName);
 
         // 파일 확장자 확인
         // -> 이미지 파일이면 데이터베이스 저장
