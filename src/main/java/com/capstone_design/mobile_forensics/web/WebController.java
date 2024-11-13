@@ -25,23 +25,17 @@ public class WebController {
     // 위치 정보는 위도/경도로 변환되어 전달되어야 함
     // 전달 시, 배치파일 다운로드하도록 연결 (static .bat file )
     // 받은 사용자 정보는 따로 저장한다.
-    @PostMapping("/request")
-    public ResponseEntity<String> getData(@RequestBody LocalDateTime dateTime,
-                                          @RequestBody String Latitude,
-                                          @RequestBody String Longitude) {
-        String savedUser = webService.saveUser(dateTime, Latitude, Longitude);
-        return new ResponseEntity<>(savedUser, HttpStatusCode.valueOf(200));
+    @PostMapping("/result")
+    public ResponseEntity<UserData> getData(@RequestBody UserDTO request) {
+        ResponseEntity<UserData> response = webService.saveUser(request);
+        return response;
     }
 
-    // 사용자 정보가 따로 반환되었으니, 프론트에서는 유저 아이디를 쿠키에 저장한다.
-    // 그리고 사용자가 배치파일을 다운로드할 수 있도록 다시 한 번 배치파일에 대한 정보를 요청한다.
-    @GetMapping("/batch")
-    public ResponseEntity<String> serveBatchFile() {
-        String filePath = "/static/example_batch.bat";
-        return new ResponseEntity<>(filePath, HttpStatusCode.valueOf(200));
+    // 저장된 이후에, 프론트엔드에서 따로 다시 GET 요청,
+    // 요청 정보에 처음 POST요청에서 응답으로 받았던 유저 아이디를 함께 보내주면
+    // 해당 유저 아이디에 대한 정보를 기반으로 데이터 모두 전송
+    @GetMapping("/result")
+    public ResponseEntity<String> getAllData() {
+        return null;
     }
-
-    // 배치파일로부터 파일 전송 받는 즉시 프론트에 알림
-
-
 }

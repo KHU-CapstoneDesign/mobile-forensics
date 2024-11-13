@@ -2,14 +2,12 @@ package com.capstone_design.mobile_forensics.web;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @Slf4j
@@ -17,15 +15,21 @@ public class WebService {
     @Autowired
     private UserRepository userRepository;
 
-    public String saveUser(LocalDateTime dateTime, String lat, String lon) {
-        UserData userData = new UserData(null, lat, lon, dateTime);
+    public ResponseEntity<UserData> saveUser(UserDTO request) {
+        log.info("data={}", request);
+        UserData userData = request.toEntity();
+        try {
+            UserData saved = userRepository.save(userData);
+            return new ResponseEntity<>(saved, HttpStatusCode.valueOf(200));
+        } catch(Exception e) {
+            log.error(e.getMessage());
+            return new ResponseEntity<>(null, HttpStatusCode.valueOf(300));
+        }
 
-        UserData saved = userRepository.save(userData);
-        return saved.toString();
     }
 
-    public void sendNotificationStart(){
-        String url = "http://frontend-server.com/api/notify-start";
+    public ResponseEntity<String> sendNotificationStart(){
+        String url = "http://localhost/api/signal";
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -34,13 +38,16 @@ public class WebService {
         String body = "{ \"message\": \"Data processing started\" }";
         HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
 
+        log.info("Request = {}", requestEntity);
+
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 
         log.info("Notification sent to frontend: " + response.getStatusCode());
+        return response;
     }
 
-    public void sendNotificationEnd(){
-        String url = "http://frontend-server.com/api/notify-end";
+    public ResponseEntity<String> sendNotificationEnd(){
+        String url = "http://frontend-server.com/api/signal";
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -49,9 +56,12 @@ public class WebService {
         String body = "{ \"message\": \"Data processing complete\" }";
         HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
 
+        log.info("Request = {}", requestEntity);
+
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 
         log.info("Notification sent to frontend: " + response.getStatusCode());
+        return response;
     }
 
 
