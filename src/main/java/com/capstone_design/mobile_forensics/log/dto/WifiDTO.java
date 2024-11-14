@@ -13,6 +13,11 @@ import java.time.LocalDateTime;
 public class WifiDTO implements LogEntry {
     private String ssid;
     private String bssid;
+
+    private double signalStrength;
+    private Integer durationMillis;
+    private Integer mChannelInfo;
+
     private String latitude;
     private String longitude;
     private LocalDateTime timestamp;

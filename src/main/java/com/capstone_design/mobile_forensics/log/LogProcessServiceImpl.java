@@ -1,5 +1,6 @@
 package com.capstone_design.mobile_forensics.log;
 
+import com.capstone_design.mobile_forensics.log.api.GeolocationService;
 import com.capstone_design.mobile_forensics.log.dto.*;
 import com.capstone_design.mobile_forensics.log.entity.*;
 import com.capstone_design.mobile_forensics.log.repository.AppUsageRepository;
@@ -25,13 +26,9 @@ import java.util.regex.Pattern;
 @Service
 @Slf4j
 public class LogProcessServiceImpl implements LogProcessService {
-    /**
-     * AppUsage Format (time, type, package, class, instanceId, taskRootClass)
-     * PictureTaken Format (MM-dd HH:mm:ss) - 이건 로그 유무로 확인
-     * GPS Format (Date/Time {yyyy:MM:dd HH:mm:ss'Z'}, Position (아래 예시 deg) )
-     * 37 deg 32' 42.78" N, 126 deg 44' 36.65" E -> 37°32'42.8"N 126°44'36.7"E
-     */
-    // Repositories
+
+    @Autowired
+    private GeolocationService geolocationService;
     @Autowired
     private AppUsageRepository appUsageRepository;
     @Autowired
@@ -41,14 +38,14 @@ public class LogProcessServiceImpl implements LogProcessService {
     @Autowired
     private WifiRepository wifiRepository;
 
-    // 로그 데이터 시간 형식
+    // [ 로그 데이터 시간 형식 ]
     private static final DateTimeFormatter appUsageFORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final DateTimeFormatter otherFORMATTER = DateTimeFormatter.ofPattern("MM-dd HH:mm:ss");
+    private static final DateTimeFormatter otherFORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private static final DateTimeFormatter gpsFORMATTER = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
 
     private static String extractYear() {
         LocalDate now = LocalDate.now();
-        int year = now.getDayOfYear();
+        int year = now.getYear();
         return String.valueOf(year);
     }
 
@@ -56,17 +53,23 @@ public class LogProcessServiceImpl implements LogProcessService {
     public List<LogEntityEntry> parseLogs(MultipartFile file) throws IOException
     {
         ArrayList<LogEntityEntry> logs = new ArrayList<>();
-        // 사진 메타데이터 파일인 경우 - 파일 하나 통째로 파싱 (한줄씩 로그파싱X)
-        if (file.getOriginalFilename().contains("metadata")) { LogEntityEntry log = gpsMetadataProcess(file);}
 
-        // 나머지 로그 파일은 line 단위로 파싱
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream())))
-        {
-            String line;
-            while ((line = reader.readLine()) != null)
-            {
-                LogEntityEntry log = parseLine(line);
-                if(log != null) logs.add(log);
+        // 사진 메타데이터 파일인 경우 - 파일 하나 통째로 파싱 (한줄씩 로그파싱X)
+        if (file.getOriginalFilename().contains("metadata")) {
+            log.info("Received File is GPS metadata File.");
+            LogEntityEntry log = gpsMetadataProcess(file);
+            if(log != null) logs.add(log);
+        }
+        else {
+
+            // 나머지 로그 파일은 line 단위로 파싱
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+//                line = line.substring(0, line.length() - 1);
+                    LogEntityEntry log = parseLine(line);
+                    if (log != null) logs.add(log);
+                }
             }
         }
         return logs;
@@ -83,7 +86,6 @@ public class LogProcessServiceImpl implements LogProcessService {
         else if(line.contains("onCaptureCompleted")) {return parseTakenPitureLogProcess(line);}
         // 와이파이 로그파일인 경우
         else if(line.contains("BSSID")) {return wifiLogProcess(line);}
-
         // 그 외 알 수 없는 파일
         else {log.info("Unknown log type: " + line); return null;}
     }
@@ -91,9 +93,16 @@ public class LogProcessServiceImpl implements LogProcessService {
     // 드라이브, 사용자 카메라 앱 관련 로그 파싱 (App Usage)
     public AppUsageLog parseAppUsageLogProcess(String line)
     {
+        log.info("Get AppUsageLog: " + line);
         try {
-            String[] parts = line.split(" ");
-            String timePart = parts[0].split("=")[1] + " " + parts[1];
+            String[] parts = line.trim().split(" ");
+
+//            for (String part : parts) {
+//                System.out.println(part);
+//            }
+
+            // time 부분 추출 후 따옴표 제거
+            String timePart = parts[0].split("=")[1].replace("\"", "") + " " + parts[1].replace("\"", "");
             LocalDateTime timestamp = LocalDateTime.parse(timePart, appUsageFORMATTER);
             log.info("timestamp = {}", timestamp);
 
@@ -108,11 +117,11 @@ public class LogProcessServiceImpl implements LogProcessService {
                 AppUsageLog saved = saveAppUsageLog(dto);
                 return saved;
             } catch(Exception ex) {
-                System.err.println("Failed to Save AppUsageLog Entity: " + line);
+                log.error("Failed to Save AppUsageLog Entity: " + line);
                 return null;
             }
         } catch (Exception e) {
-            System.err.println("Error parsing application usage log: " + line);
+            log.error("Error parsing application usage log: " + line);
             return null;
         }
     }
@@ -121,73 +130,61 @@ public class LogProcessServiceImpl implements LogProcessService {
     public TakenPictureLog parseTakenPitureLogProcess(String line)
     {
         try {
-            // 정규식을 통해 필요한 데이터 파싱
-            Pattern pattern = Pattern.compile(
-                    "(\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})\\.\\d+\\s+\\d+\\s+\\d+\\s+(\\w+-\\d+):\\s+(\\w+)\\s+.+onCaptureCompleted");
-            Matcher matcher = pattern.matcher(line);
+//             정규식을 통해 필요한 데이터 파싱
+            String[] parts = line.split(" ");
 
-            if (matcher.find()) {
-                // 날짜 및 시간 파싱 후 LocalDateTime 형식으로 변환
+            String datePart = parts[0] + " " + parts[1];
+            String dateTime = extractYear() + "-" + datePart;
+            LocalDateTime timestamp = LocalDateTime.parse(dateTime, otherFORMATTER);
+            String tag = parts[6];
+            String eventType = parts[7];
 
-                String dateTimeStr = extractYear() + "-" + matcher.group(1);  // 연도를 추가하여 yyyy-MM-dd 형식으로 맞춤
-                LocalDateTime timestamp = LocalDateTime.parse(dateTimeStr, otherFORMATTER);
+            log.info("Timestamp={}, Tag={}, EventType={}", timestamp, tag, eventType);
 
-                // 로그의 태그와 이벤트 타입 파싱
-                String tag = matcher.group(2);
-                String eventType = matcher.group(3);
-
-                // ShootingLog 객체 생성 후 반환
-                TakenPictureDTO dto = new TakenPictureDTO(timestamp, tag, eventType);
-                try {
-                    TakenPictureLog saved = saveTakenPictureLog(dto);
-                    return saved;
-                } catch (Exception e) {
-                    System.err.println("Failed to Save TakenPictureLog Entity: " + line);
-                    return null;
-                }
-            } else {
-                throw new IllegalArgumentException("로그 형식이 올바르지 않습니다.");
+            // ShootingLog 객체 생성 후 반환
+            TakenPictureDTO dto = new TakenPictureDTO(timestamp, tag, eventType);
+            try {
+                TakenPictureLog saved = saveTakenPictureLog(dto);
+                return saved;
+            } catch (Exception e) {
+                log.error("Failed to Save TakenPictureLog Entity: " + line);
+                return null;
             }
         } catch (Exception e) {
-            System.err.println("Error parsing camera shooting log: " + line);
+            log.error("Error parsing camera shooting log: " + line);
+            log.error(e.getMessage());
             return null;
         }
     }
     public WifiLog wifiLogProcess(String line) {
-        // 정규식을 이용해 SSID, BSSID, startTime 추출
-        Pattern pattern = Pattern.compile(
-                "startTime=(\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d+), SSID=\"([^\"]+)\", BSSID=([^\s,]+)");
-        Matcher matcher = pattern.matcher(line);
+        String startTime = parseField(line, "startTime=", ",");
+        String ssid = parseField(line, "SSID=\"", "\"");
+        String bssid = parseField(line, "BSSID=", ",");
+        Integer durationMillis = Integer.parseInt(parseField(line, "durationMillis=", ","));
+        double signalStrength = Double.parseDouble(parseField(line, "signalStrength=", ","));
+        Integer mChannelInfo = Integer.parseInt(parseField(line, "mChannelInfo=", ","));
 
-        if (matcher.find()) {
-            // 추출된 값들
-            String startTime = matcher.group(1);
-            String ssid = matcher.group(2);
-            String bssid = matcher.group(3);
+        // startTime을 LocalDateTime으로 변환
+        String dateTimeStr = extractYear() + "-" + startTime;  // 연도를 추가하여 yyyy-MM-dd 형식으로 맞춤
+        LocalDateTime timestamp = LocalDateTime.parse(dateTimeStr, otherFORMATTER);
 
-            // startTime을 LocalDateTime으로 변환
-            String dateTimeStr = extractYear() + "-" + matcher.group(1);  // 연도를 추가하여 yyyy-MM-dd 형식으로 맞춤
-            LocalDateTime timestamp = LocalDateTime.parse(dateTimeStr, otherFORMATTER);
+        // WifiLog 객체 생성 후 반환 <-- 추출한 위도, 경도 입력 필요
+        WifiDTO dto = new WifiDTO(ssid, bssid, signalStrength, durationMillis, mChannelInfo, null, null, timestamp);
+        WifiDTO locationsDTO = geolocationService.getLocation(dto);
 
-            extractYear();
-            /*
-            * BSSID로 위도, 경도 추출 필요
-            * */
-
-            // WifiLog 객체 생성 후 반환 <-- 추출한 위도, 경도 입력 필요
-            WifiDTO dto = new WifiDTO(ssid, bssid, null, null, timestamp);
-            try {
-                WifiLog saved = saveWifiLog(dto);
-                return saved;
-            } catch (Exception e) {
-                System.err.println("Failed to Save WifiLog Entity: " + line);
-                return null;
-            }
-        } else {
-            // 형식이 맞지 않으면 null 반환
-            System.err.println("Failed to parse log line: " + line);
+        try {
+            WifiLog saved = saveWifiLog(locationsDTO);
+            return saved;
+        } catch (Exception e) {
+            log.error("Failed to Save WifiLog Entity: " + line);
             return null;
         }
+    }
+
+    private String parseField(String line, String start, String end) {
+        int startIndex = line.indexOf(start) + start.length();
+        int endIndex = line.indexOf(end, startIndex);
+        return line.substring(startIndex, endIndex).trim();
     }
 
     public GPSMetadata gpsMetadataProcess(MultipartFile file) throws IOException {
@@ -201,14 +198,14 @@ public class LogProcessServiceImpl implements LogProcessService {
 
             // 각 줄을 읽으면서 필요한 정보 추출
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("GPS Date/Time")) {
+                if (line.contains("GPS Date/Time")) {
                     // Date/Time 부분 추출하여 LocalDateTime으로 변환
                     String dateTimeStr = line.split(": ", 2)[1].replace("Z", "");
                     timestamp = LocalDateTime.parse(dateTimeStr, gpsFORMATTER);
-                } else if (line.startsWith("GPS Latitude")) {
+                } else if (line.contains("GPS Latitude")) {
                     // Latitude 부분 추출
                     latitude = line.split(": ", 2)[1];
-                } else if (line.startsWith("GPS Longitude")) {
+                } else if (line.contains("GPS Longitude")) {
                     // Longitude 부분 추출
                     longitude = line.split(": ", 2)[1];
                 }
@@ -221,7 +218,7 @@ public class LogProcessServiceImpl implements LogProcessService {
             GPSMetadata saved = saveGPSmetadata(dto);
             return saved;
         } catch (Exception e) {
-            System.err.println("Failed to Save GPS Metadata Entity");
+            log.error("Failed to Save GPS Metadata Entity");
             return null;
         }
     }
