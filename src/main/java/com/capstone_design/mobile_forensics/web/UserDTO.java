@@ -15,9 +15,14 @@ public class UserDTO {
     LocalDateTime dateTime;
 
     UserData toEntity(){
+        String la = latitude.replace("N", "");
+        String lo = longitude.replace("E", "");
+        double lat = Double.parseDouble(la);
+        double lng = Double.parseDouble(lo);
+
         return UserData.builder()
-                .latitude(latitude)
-                .longitude(longitude)
+                .latitude(lat)
+                .longitude(lng)
                 .dateTime(dateTime).build();
     }
 }

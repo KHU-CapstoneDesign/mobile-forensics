@@ -16,7 +16,7 @@ public class UserData {
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long userId;
 
-    private String latitude;
-    private String longitude;
+    private double latitude;
+    private double longitude;
     private LocalDateTime dateTime;
 }
