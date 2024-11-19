@@ -13,8 +13,8 @@ public class GPSMetadata implements LogEntityEntry {
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long logId;
 
-    private String latitude;
-    private String longitude;
+    private double latitude;
+    private double longitude;
 
     private LocalDateTime timestamp;
 

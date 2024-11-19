@@ -14,8 +14,8 @@ public class GPSMetadataDTO implements LogEntry {
     * <latitude - 위도> 37.123456 N
     * <longitude - 경도> 127.123456 E
     * */
-    private String latitude;
-    private String longitude;
+    private double latitude;
+    private double longitude;
     private LocalDateTime timestamp;
 
     @Override

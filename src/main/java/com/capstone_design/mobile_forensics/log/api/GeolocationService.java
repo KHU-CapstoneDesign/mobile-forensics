@@ -33,8 +33,11 @@ public class GeolocationService {
 
         // 응답으로 받은 위도, 경도 정보 추출
         GeolocationResponse geolocationResponse = response.getBody();
-        String latitude = String.valueOf(geolocationResponse.getLocation().getLat());
-        String longitude = String.valueOf(geolocationResponse.getLocation().getLng());
+        String lat = String.valueOf(geolocationResponse.getLocation().getLat());
+        String lng = String.valueOf(geolocationResponse.getLocation().getLng());
+
+        double latitude = Double.parseDouble(lat);
+        double longitude = Double.parseDouble(lng);
 
         dto.setLatitude(latitude);
         dto.setLongitude(longitude);

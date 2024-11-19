@@ -18,8 +18,8 @@ public class WifiDTO implements LogEntry {
     private Integer durationMillis;
     private Integer mChannelInfo;
 
-    private String latitude;
-    private String longitude;
+    private double latitude;
+    private double longitude;
     private LocalDateTime timestamp;
 
     @Override

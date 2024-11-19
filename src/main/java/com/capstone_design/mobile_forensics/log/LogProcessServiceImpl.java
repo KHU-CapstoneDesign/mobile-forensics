@@ -9,6 +9,8 @@ import com.capstone_design.mobile_forensics.log.repository.TakenPictureRepositor
 import com.capstone_design.mobile_forensics.log.repository.WifiRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -50,7 +52,7 @@ public class LogProcessServiceImpl implements LogProcessService {
     }
 
     // 로그 파일 읽고 파싱
-    public List<LogEntityEntry> parseLogs(MultipartFile file) throws IOException
+    public ResponseEntity parseLogs(MultipartFile file) throws IOException
     {
         ArrayList<LogEntityEntry> logs = new ArrayList<>();
 
@@ -70,9 +72,13 @@ public class LogProcessServiceImpl implements LogProcessService {
                     LogEntityEntry log = parseLine(line);
                     if (log != null) logs.add(log);
                 }
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                return new ResponseEntity(HttpStatusCode.valueOf(503));
             }
         }
-        return logs;
+        if (!logs.isEmpty()) return new ResponseEntity(HttpStatusCode.valueOf(200));
+        else return new ResponseEntity(HttpStatusCode.valueOf(204));
     }
 
 
@@ -169,7 +175,7 @@ public class LogProcessServiceImpl implements LogProcessService {
         LocalDateTime timestamp = LocalDateTime.parse(dateTimeStr, otherFORMATTER);
 
         // WifiLog 객체 생성 후 반환 <-- 추출한 위도, 경도 입력 필요
-        WifiDTO dto = new WifiDTO(ssid, bssid, signalStrength, durationMillis, mChannelInfo, null, null, timestamp);
+        WifiDTO dto = new WifiDTO(ssid, bssid, signalStrength, durationMillis, mChannelInfo, 0.0, 0.0, timestamp);
         WifiDTO locationsDTO = geolocationService.getLocation(dto);
 
         try {
@@ -188,8 +194,8 @@ public class LogProcessServiceImpl implements LogProcessService {
     }
 
     public GPSMetadata gpsMetadataProcess(MultipartFile file) throws IOException {
-        String latitude = null;
-        String longitude = null;
+        double latitude = 0.0;
+        double longitude = 0.0;
         LocalDateTime timestamp = null;
 
         // 파일 내용을 BufferedReader로 읽기
@@ -204,10 +210,14 @@ public class LogProcessServiceImpl implements LogProcessService {
                     timestamp = LocalDateTime.parse(dateTimeStr, gpsFORMATTER);
                 } else if (line.contains("GPS Latitude")) {
                     // Latitude 부분 추출
-                    latitude = line.split(": ", 2)[1];
+                    String lat = line.split(": ", 2)[1];
+                    lat.replace("N", "");
+                    latitude = Double.parseDouble(lat);
                 } else if (line.contains("GPS Longitude")) {
                     // Longitude 부분 추출
-                    longitude = line.split(": ", 2)[1];
+                    String lng = line.split(": ", 2)[1];
+                    lng.replace("E", "");
+                    longitude = Double.parseDouble(lng);
                 }
             }
         }

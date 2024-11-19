@@ -15,8 +15,8 @@ public class WifiLog implements LogEntityEntry{
 
     private String ssid;
     private String bssid;
-    private String latitude;
-    private String longitude;
+    private double latitude;
+    private double longitude;
 
     private LocalDateTime timestamp;
 }

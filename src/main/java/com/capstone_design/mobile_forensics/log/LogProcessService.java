@@ -2,14 +2,17 @@ package com.capstone_design.mobile_forensics.log;
 
 import com.capstone_design.mobile_forensics.log.dto.*;
 import com.capstone_design.mobile_forensics.log.entity.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
 
+@Service
 public interface LogProcessService {
 
-    List<LogEntityEntry> parseLogs(MultipartFile file) throws IOException;
+    ResponseEntity parseLogs(MultipartFile file) throws IOException;
     LogEntityEntry parseLine(String line);
 
     AppUsageLog parseAppUsageLogProcess(String line);
