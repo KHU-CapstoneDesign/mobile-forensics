@@ -1,31 +1,40 @@
 package com.capstone_design.mobile_forensics.web;
 
+import com.capstone_design.mobile_forensics.web.ResponseDTO.WholeData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 @Service
 @Slf4j
 public class WebService {
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private DataDetectService dataDetectService;
 
     public ResponseEntity<UserData> saveUser(UserDTO request) {
         log.info("data={}", request);
         UserData userData = request.toEntity();
         try {
             UserData saved = userRepository.save(userData);
-            return new ResponseEntity<>(saved, HttpStatusCode.valueOf(200));
+            Long userId = saved.getUserId();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(URI.create("/api/result/user"));
+            headers.add("Set-Cookie", "userId=" + userId + "; Path=/api/result; HttpOnly");
+
+            return new ResponseEntity<>(headers, HttpStatusCode.valueOf(303));
         } catch(Exception e) {
             log.error(e.getMessage());
-            return new ResponseEntity<>(null, HttpStatusCode.valueOf(300));
+            return new ResponseEntity<>(null, HttpStatusCode.valueOf(503));
         }
-
     }
 
     public ResponseEntity<String> sendNotificationStart(){
@@ -64,6 +73,34 @@ public class WebService {
         return response;
     }
 
+    public ResponseEntity countAllData(Long userId) {
+        Optional<UserData> byId = userRepository.findById(userId);
+        UserData user = byId.orElseThrow(()-> new RuntimeException("Cannot Find User. Please Rewrite User Data(Location, DateTime)."));
+        log.info(user.toString());
+        try {
+            WholeData data = findData(user);
+            log.info("+++++ whole data +++++");
+            log.info(data.toString());
+            log.info(data.getGps().toString());
 
+            return new ResponseEntity<>(data, HttpStatusCode.valueOf(200));
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return new ResponseEntity<>(HttpStatusCode.valueOf(503));
+        }
+    }
+
+    private WholeData findData(UserData user){
+        return new WholeData().builder()
+                .images(dataDetectService.getImageFile(user))
+                .pictureTaken(dataDetectService.getCountTakenPictureLog(user))
+                .gps(new WholeData.GPS().builder()
+                        .metadata(dataDetectService.getCountGPSmetadata(user))
+                        .wifi(dataDetectService.getCountWifiLog(user))
+                        .build())
+                .appUsage(dataDetectService.getCountAppUsageLog(user))
+                .cache(dataDetectService.getCacheImage(user))
+                .build();
+    }
 
 }
