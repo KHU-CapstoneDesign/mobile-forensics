@@ -27,8 +27,9 @@ public class FileController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file) throws IOException {
-        fileService.fileUpload(file);
+    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file,
+                                                   @RequestParam("parentDir")String parentDir) throws IOException {
+        fileService.fileUpload(file, parentDir);
         return null;
     }
 }

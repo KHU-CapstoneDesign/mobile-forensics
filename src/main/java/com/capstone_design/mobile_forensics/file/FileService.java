@@ -5,8 +5,10 @@ import com.capstone_design.mobile_forensics.log.LogProcessServiceImpl;
 import com.capstone_design.mobile_forensics.web.WebService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -39,7 +41,7 @@ public class FileService {
         return null;
     }
 
-    public ResponseEntity fileUpload(MultipartFile file) throws IOException {
+    public void fileUpload(MultipartFile file, String parentDir) throws IOException {
         String fileName = file.getOriginalFilename();
         log.info("File received.\tFile Name = {}", fileName);
 
@@ -48,19 +50,16 @@ public class FileService {
         // -> 로그 파일이면 로그 파싱 후 저장
         switch (getFileExtension(fileName).toLowerCase()) {
             case "txt" :
-                logService.parseLogs(file); // 로그파일 처리
+                ResponseEntity response = logService.parseLogs(file);// 로그파일 처리
                 break;
             case "jpg" :
             case "jpeg" :
             case "png" :
-                processImageFile(file); // 이미지파일 처리
+                processImageFile(file, parentDir); // 이미지파일 처리
                 break;
             default :
                 throw new IllegalArgumentException("Unsupported File Type: " + fileName);
-
         }
-
-        return null;
     }
 
     // 파일 확장자 추출
@@ -72,30 +71,55 @@ public class FileService {
         return fileName.substring(lastIndex + 1);
     }
 
+    // 파일 이름을 LocalDateTime으로 변환하는 메서드
+    private LocalDateTime getTimestamp(String fileName) {
+        // 파일 이름에서 .jpg 확장자 제거
+        String baseFileName = StringUtils.stripFilenameExtension(fileName);
+
+        // 파일 이름이 yyyyMMdd_hhmmss 형식이라면 이를 LocalDateTime으로 파싱
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+        try {
+            return LocalDateTime.parse(baseFileName, formatter);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return null;
+        }
+    }
+
+    private String determineImageType(String parentDir) {
+        switch (parentDir) {
+            case "\\Camera":
+                return "camera";
+            case "\\Trash":
+                return "trash";
+            case "\\Soda_cache":
+                return "soda";  // Soda_cache는 soda로 구분
+            case "\\MYBOX_cache":
+                return "mybox";  // MYBOX_cache는 mybox로 구분
+            default:
+                return "unknown";  // 기본값
+        }
+    }
+
     // 이미지 파일 처리(저장)
-    private ImageFile processImageFile(MultipartFile file) throws IOException {
-        log.info("Processing Image File: " + file.getOriginalFilename());
+    private ResponseEntity processImageFile(MultipartFile file, String parentDir) throws IOException {
+        String filename = file.getOriginalFilename();
+        log.info("Processing Image File: " + filename);
 
         try {
             byte[] imageBytes = file.getBytes();
-            ImageFile imageFile = new ImageFile(null, file.getOriginalFilename(), imageBytes, null);
+            LocalDateTime timestamp = getTimestamp(filename);
+            String fileType = determineImageType(parentDir);
+
+            ImageFile imageFile = new ImageFile(null, file.getOriginalFilename(), imageBytes, fileType, timestamp);
             ImageFile saved = imageRepository.save(imageFile);
-            return saved;
+            log.info("Saved Image File = {}", saved);
+            return new ResponseEntity(HttpStatusCode.valueOf(200));
         } catch (IOException e) {
             throw new RuntimeException("Failed to Process Image File", e);
         }
     }
 
 
-    private LocalDateTime extractTimeStamp(String fileName) {
-        // 파일 이름이 "yyyyMMdd_HHmmss.jpg" 형식이므로, 확장자를 제거하고 날짜 부분만 추출
-        String datePart = fileName.substring(0, fileName.indexOf("."));
-
-        // DateTimeFormatter 생성, 파일 이름 형식에 맞춤
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-
-        // LocalDateTime으로 변환
-        return LocalDateTime.parse(datePart, formatter);
-    }
 
 }
