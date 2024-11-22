@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity @Table(name = "wifi")
 @Builder @AllArgsConstructor @NoArgsConstructor
-@ToString
+@ToString @Getter
 public class WifiLog implements LogEntityEntry{
 
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)

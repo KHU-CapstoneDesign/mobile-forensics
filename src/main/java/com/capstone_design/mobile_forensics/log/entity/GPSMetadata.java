@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity @Table(name = "gps_image_metadata")
 @Builder @AllArgsConstructor @NoArgsConstructor
-@ToString
+@ToString @Getter
 public class GPSMetadata implements LogEntityEntry {
 
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
