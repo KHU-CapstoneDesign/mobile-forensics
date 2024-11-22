@@ -1,106 +1,34 @@
 package com.capstone_design.mobile_forensics.web;
 
-import com.capstone_design.mobile_forensics.web.ResponseDTO.WholeData;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
-import java.time.LocalDateTime;
-import java.util.Optional;
+import java.io.IOException;
 
 @Service
-@Slf4j
-public class WebService {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private DataDetectService dataDetectService;
+public interface WebService {
 
-    public ResponseEntity<UserData> saveUser(UserDTO request) {
-        log.info("data={}", request);
-        UserData userData = request.toEntity();
-        try {
-            UserData saved = userRepository.save(userData);
-            Long userId = saved.getUserId();
+    ResponseEntity<UserData> saveUser(UserDTO request);
+    UserData getUser(Long userId);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setLocation(URI.create("/api/result/user"));
-            headers.add("Set-Cookie", "userId=" + userId + "; Path=/api/result; HttpOnly");
+    ResponseEntity<String> sendNotificationStart();
+    ResponseEntity<String> sendNotificationEnd();
 
-            return new ResponseEntity<>(headers, HttpStatusCode.valueOf(303));
-        } catch(Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(null, HttpStatusCode.valueOf(503));
-        }
-    }
+    ResponseEntity countAllData(Long userId);
 
-    public ResponseEntity<String> sendNotificationStart(){
-        String url = "http://localhost/api/signal";
-        RestTemplate restTemplate = new RestTemplate();
+    ResponseEntity getCameraImages(Long userId) throws IOException;
+    ResponseEntity getCloudImages(Long userId) throws IOException;
+    ResponseEntity getCacheImages(Long userId) throws IOException;
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Content-Type", "application/json");
+    ResponseEntity getNaverCloud_AppUsage(Long userId);
+    ResponseEntity getGoogleCloud_AppUsage(Long userId);
 
-        String body = "{ \"message\": \"Data processing started\" }";
-        HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
+    ResponseEntity getSnow_AppUsage(Long userId);
+    ResponseEntity getSoda_AppUsage(Long userId);
 
-        log.info("Request = {}", requestEntity);
+    ResponseEntity getPictureTakenLog(Long userId);
+    ResponseEntity getLocationLog(Long userId);
 
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-
-        log.info("Notification sent to frontend: " + response.getStatusCode());
-        return response;
-    }
-
-    public ResponseEntity<String> sendNotificationEnd(){
-        String url = "http://frontend-server.com/api/signal";
-        RestTemplate restTemplate = new RestTemplate();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Content-Type", "application/json");
-
-        String body = "{ \"message\": \"Data processing complete\" }";
-        HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
-
-        log.info("Request = {}", requestEntity);
-
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-
-        log.info("Notification sent to frontend: " + response.getStatusCode());
-        return response;
-    }
-
-    public ResponseEntity countAllData(Long userId) {
-        Optional<UserData> byId = userRepository.findById(userId);
-        UserData user = byId.orElseThrow(()-> new RuntimeException("Cannot Find User. Please Rewrite User Data(Location, DateTime)."));
-        log.info(user.toString());
-        try {
-            WholeData data = findData(user);
-            log.info("+++++ whole data +++++");
-            log.info(data.toString());
-            log.info(data.getGps().toString());
-
-            return new ResponseEntity<>(data, HttpStatusCode.valueOf(200));
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(HttpStatusCode.valueOf(503));
-        }
-    }
-
-    private WholeData findData(UserData user){
-        return new WholeData().builder()
-                .images(dataDetectService.getImageFile(user))
-                .pictureTaken(dataDetectService.getCountTakenPictureLog(user))
-                .gps(new WholeData.GPS().builder()
-                        .metadata(dataDetectService.getCountGPSmetadata(user))
-                        .wifi(dataDetectService.getCountWifiLog(user))
-                        .build())
-                .appUsage(dataDetectService.getCountAppUsageLog(user))
-                .cache(dataDetectService.getCacheImage(user))
-                .build();
-    }
+    ResponseEntity exit(Long userId);
 
 }
