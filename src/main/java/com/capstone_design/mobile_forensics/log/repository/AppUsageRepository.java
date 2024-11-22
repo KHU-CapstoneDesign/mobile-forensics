@@ -16,4 +16,11 @@ public interface AppUsageRepository extends JpaRepository<AppUsageLog, Long> {
             "ABS(TIMESTAMPDIFF(MINUTE, u.timestamp, :timestamp)) <= 30",
             nativeQuery = true)
     List<AppUsageLog> findAllWithin30Minutes(@Param("timestamp") LocalDateTime timestamp);
+
+    @Query(value = "SELECT * FROM app_usage_log u WHERE " +
+            "ABS(TIMESTAMPDIFF(MINUTE, u.timestamp, :timestamp)) <= 30 AND " +
+            "u.package LIKE %:keyword%",
+            nativeQuery = true)
+    List<AppUsageLog> findAllWithin30MinutesAndPackageContaining(@Param("timestamp") LocalDateTime timestamp,
+                                                                 @Param("keyword") String keyword);
 }
