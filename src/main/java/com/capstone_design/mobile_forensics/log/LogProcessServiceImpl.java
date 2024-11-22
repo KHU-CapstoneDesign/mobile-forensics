@@ -255,9 +255,4 @@ public class LogProcessServiceImpl implements LogProcessService {
     }
 }
 
-/*
-* 반경 50m
-*
-* 위도 1도 당, 110.9
-* */
 
