@@ -131,8 +131,14 @@ public class WebServiceImpl implements WebService{
                         .metadata(dataDetectService.getCountGPSmetadata(user))
                         .wifi(dataDetectService.getCountWifiLog(user))
                         .build())
-                .appUsage(dataDetectService.getCountAppUsageLog(user))
-                .cache(dataDetectService.getCacheImage(user))
+                .appUsage(new WholeData.AppUsage().builder()
+                        .cloud(dataDetectService.getCountCloudAppUsageLog(user))
+                        .camera(dataDetectService.getCountCameraAppUsageLog(user))
+                        .build())
+                .cache(new WholeData.Cache().builder()
+                        .mybox(dataDetectService.getDriveCacheImage(user))
+                        .soda(dataDetectService.getSodaCacheImage(user))
+                        .build())
                 .build();
     }
 

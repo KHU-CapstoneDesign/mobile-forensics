@@ -8,24 +8,21 @@ public class WholeData {
     private Long images;
     private Long pictureTaken;
     private GPS gps;
-    private Long appUsage;
-    private Long cache;
+    private AppUsage appUsage;
+    private Cache cache;
     @Data @Builder @AllArgsConstructor @NoArgsConstructor @ToString
     public static class GPS {
         private Long metadata;
         private Long wifi;
     }
+    @Data @Builder @AllArgsConstructor @NoArgsConstructor @ToString
+    public static class AppUsage {
+        private Long cloud;
+        private Long camera;
+    }
+    @Data @Builder @AllArgsConstructor @NoArgsConstructor @ToString
+    public static class Cache {
+        private Long soda;
+        private Long mybox;
+    }
 }
-/*
-* {
-	"images": 5,
-	"pictureTaken": 5,
-	"gps": {
-					"metadata": 5,
-					"wifi": 5
-					},
-	"appUsage": 5,
-	"cache": 5
-}
-*
-* */
