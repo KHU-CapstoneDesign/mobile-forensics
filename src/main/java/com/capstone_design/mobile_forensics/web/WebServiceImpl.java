@@ -1,7 +1,6 @@
 package com.capstone_design.mobile_forensics.web;
 
 import com.capstone_design.mobile_forensics.file.FileService;
-import com.capstone_design.mobile_forensics.file.FileServiceImpl;
 import com.capstone_design.mobile_forensics.file.ImageFileRepository;
 import com.capstone_design.mobile_forensics.file.api.SafeSearchResponse;
 import com.capstone_design.mobile_forensics.log.dto.LocationDTO;

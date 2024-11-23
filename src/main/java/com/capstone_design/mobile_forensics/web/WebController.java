@@ -14,8 +14,6 @@ public class WebController {
 
     @Autowired
     private WebService webService;
-    @Autowired
-    private SafeSearchService safeSearchService;
 
     // 사용자 정보 (날짜, 위치, 시간 등) 전송
     // 위치 정보는 위도/경도로 변환되어 전달되어야 함

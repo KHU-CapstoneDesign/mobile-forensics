@@ -1,11 +1,9 @@
 package com.capstone_design.mobile_forensics.web;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
-@Service
 public interface WebService {
 
     ResponseEntity<UserData> saveUser(UserDTO request);

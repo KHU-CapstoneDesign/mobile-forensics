@@ -5,10 +5,11 @@ import com.capstone_design.mobile_forensics.file.api.SafeSearchResponse;
 import com.capstone_design.mobile_forensics.file.api.SafeSearchService;
 import com.capstone_design.mobile_forensics.log.LogProcessService;
 import com.capstone_design.mobile_forensics.web.UserData;
-import com.capstone_design.mobile_forensics.web.WebServiceImpl;
+import com.capstone_design.mobile_forensics.web.WebService;
 import com.google.cloud.vision.v1.SafeSearchAnnotation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,17 +22,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static com.fasterxml.jackson.databind.type.LogicalType.Collection;
 
 @Service
 @Slf4j
 public class FileServiceImpl implements FileService{
 
-    @Autowired
-    private WebServiceImpl webService;
+    @Autowired @Lazy
+    private WebService webService;
     @Autowired
     private LogProcessService logService;
     @Autowired
