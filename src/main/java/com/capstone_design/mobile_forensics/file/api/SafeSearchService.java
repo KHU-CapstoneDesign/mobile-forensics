@@ -33,6 +33,9 @@ public class SafeSearchService {
             } else {
                 throw new RuntimeException("No SafeSearchAnnotation available for the image.");
             }
+        } catch(Exception e) {
+            log.error(e.getMessage());
+            throw new RuntimeException("Failed to Create Google Vision-Client.");
         }
     }
 }

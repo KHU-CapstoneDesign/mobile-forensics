@@ -136,25 +136,29 @@ public class FileServiceImpl implements FileService{
 
         List<SafeSearchResponse> responses = new ArrayList<>();
 
-        for (ImageFile imageFile : imageFiles) {
-            SafeSearchAnnotation safeSearchAnnotation = safeSearchService.analyzeImage(imageFile.getImageByte());
-            String base64ImageData = Base64.getEncoder().encodeToString(imageFile.getImageByte());
+        if(!imageFiles.isEmpty()) {
+            for (ImageFile imageFile : imageFiles) {
+                SafeSearchAnnotation safeSearchAnnotation = safeSearchService.analyzeImage(imageFile.getImageByte());
+                String base64ImageData = Base64.getEncoder().encodeToString(imageFile.getImageByte());
 
-            SafeSearchResponse response = new SafeSearchResponse(
-                    imageFile.getImageName(),
-                    imageFile.getTimestamp(),
-                    imageFile.getType(),
-                    base64ImageData,
-                    new AnalysisResult(
-                            safeSearchAnnotation.getAdult(),
-                            safeSearchAnnotation.getViolence(),
-                            safeSearchAnnotation.getMedical(),
-                            safeSearchAnnotation.getRacy()
-                    )
-            );
-            responses.add(response);
+                SafeSearchResponse response = new SafeSearchResponse(
+                        imageFile.getImageName(),
+                        imageFile.getTimestamp(),
+                        imageFile.getType(),
+                        base64ImageData,
+                        new AnalysisResult(
+                                safeSearchAnnotation.getAdult(),
+                                safeSearchAnnotation.getViolence(),
+                                safeSearchAnnotation.getMedical(),
+                                safeSearchAnnotation.getRacy()
+                        )
+                );
+                responses.add(response);
+            }
+            return responses;
+        } else {
+            return responses;
         }
-        return responses;
     }
 
 

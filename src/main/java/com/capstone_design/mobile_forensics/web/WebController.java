@@ -34,9 +34,7 @@ public class WebController {
     // 사진 발견 내역 - image 중 camera, trash 타입 가져오기
     @GetMapping("/result/image")
     public ResponseEntity getCameraImage(@CookieValue(name = "userId") Long userId) throws IOException {
-        webService.getCameraImages(userId);
-        return null;
-
+        return webService.getCameraImages(userId);
     }
     // 클라우드 업로드 흔적 발견 내역 - image 중 drive 타입 가져오기
     @GetMapping("/result/cloud")

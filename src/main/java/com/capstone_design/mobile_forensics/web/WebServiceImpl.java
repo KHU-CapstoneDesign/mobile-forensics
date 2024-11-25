@@ -144,10 +144,22 @@ public class WebServiceImpl implements WebService{
 
     public ResponseEntity getCameraImages(Long userId) throws IOException {
         UserData user = getUser(userId);
-        List<SafeSearchResponse> cameras = fileService.analyzeAndRespondImages(user, "camera");
-        List<SafeSearchResponse> trashes = fileService.analyzeAndRespondImages(user, "trash");
-        List<SafeSearchResponse> result = Stream.concat(cameras.stream(), trashes.stream()).collect(Collectors.toList());
-        return new ResponseEntity(result, HttpStatusCode.valueOf(200));
+        try {
+            List<SafeSearchResponse> cameras = fileService.analyzeAndRespondImages(user, "camera");
+            List<SafeSearchResponse> trashes = fileService.analyzeAndRespondImages(user, "trash");
+            List<SafeSearchResponse> result = Stream.concat(cameras.stream(), trashes.stream()).collect(Collectors.toList());
+            if(!result.isEmpty()) {
+                for (SafeSearchResponse r : result) {
+                    log.info(r.toString());
+                }
+                return new ResponseEntity(result, HttpStatusCode.valueOf(200));
+            } else {
+                return new ResponseEntity("No Image Data", HttpStatusCode.valueOf(204));
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new RuntimeException("Can't Response From Image Analysis Service(Google Vision API).");
+        }
     }
 
     public ResponseEntity getCloudImages(Long userId) throws IOException {
