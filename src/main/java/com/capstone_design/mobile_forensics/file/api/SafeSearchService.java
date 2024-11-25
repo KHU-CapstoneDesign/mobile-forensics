@@ -1,9 +1,11 @@
 package com.capstone_design.mobile_forensics.file.api;
 
+import com.capstone_design.mobile_forensics.GoogleInitializer;
 import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -13,8 +15,11 @@ import java.util.List;
 @Slf4j
 public class SafeSearchService {
 
+    @Autowired
+    private GoogleInitializer googleInitializer;
+
     public SafeSearchAnnotation analyzeImage(byte[] imageData) throws IOException {
-        try (ImageAnnotatorClient visionClient = ImageAnnotatorClient.create()) {
+        try (ImageAnnotatorClient visionClient = googleInitializer.getVisionClient()) {
             ByteString byteString = ByteString.copyFrom(imageData);
 
             Image image = Image.newBuilder().setContent(byteString).build();
