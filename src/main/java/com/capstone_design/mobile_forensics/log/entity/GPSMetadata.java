@@ -1,5 +1,6 @@
 package com.capstone_design.mobile_forensics.log.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +16,7 @@ public class GPSMetadata implements LogEntityEntry {
 
     private double latitude;
     private double longitude;
-
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime timestamp;
 
 }

@@ -178,17 +178,24 @@ public class WebServiceImpl implements WebService{
         UserData user = getUser(userId);
         try {
             List<AppUsageLog> ndrive = appUsageRepository.findAllWithin30MinutesAndPackageContaining(user.getDateTime(), "ndrive");
+            for (AppUsageLog appUsageLog : ndrive) {
+                log.info("naver = {}", appUsageLog);
+            }
             return new ResponseEntity(ndrive, HttpStatusCode.valueOf(200));
 
         } catch(Exception e) {
             log.error(e.getMessage());
             return new ResponseEntity("Can't Find Naver MYBOX App Usage Logs.", HttpStatusCode.valueOf(404));
+//            throw new RuntimeException("Can't Find Naver MYBOX App Usage Logs.", e);
         }
     }
     public ResponseEntity getGoogleCloud_AppUsage(Long userId) {
         UserData user = getUser(userId);
         try {
             List<AppUsageLog> google = appUsageRepository.findAllWithin30MinutesAndPackageContaining(user.getDateTime(), "google");
+            for (AppUsageLog appUsageLog : google) {
+                log.info("google = {}", appUsageLog);
+            }
             return new ResponseEntity(google, HttpStatusCode.valueOf(200));
         } catch(Exception e) {
             log.error(e.getMessage());
@@ -199,6 +206,9 @@ public class WebServiceImpl implements WebService{
         UserData user = getUser(userId);
         try {
             List<AppUsageLog> snow = appUsageRepository.findAllWithin30MinutesAndPackageContaining(user.getDateTime(), "campmobile");
+            for (AppUsageLog appUsageLog : snow) {
+                log.info("snow = {}", appUsageLog);
+            }
             return new ResponseEntity(snow, HttpStatusCode.valueOf(200));
         } catch(Exception e) {
             log.error(e.getMessage());
@@ -209,6 +219,9 @@ public class WebServiceImpl implements WebService{
         UserData user = getUser(userId);
         try {
             List<AppUsageLog> soda = appUsageRepository.findAllWithin30MinutesAndPackageContaining(user.getDateTime(), "soda");
+            for (AppUsageLog appUsageLog : soda) {
+                log.info("soda = {}", appUsageLog);
+            }
             return new ResponseEntity(soda, HttpStatusCode.valueOf(200));
         } catch(Exception e) {
             log.error(e.getMessage());
@@ -220,6 +233,9 @@ public class WebServiceImpl implements WebService{
         UserData user = getUser(userId);
         try {
             List<TakenPictureLog> takenLogs = takenPictureRepository.findAllWithin30Minutes(user.getDateTime());
+            for (TakenPictureLog takenLog : takenLogs) {
+                log.info("picture taken = {}", takenLog);
+            }
             return new ResponseEntity(takenLogs, HttpStatusCode.valueOf(200));
         } catch(Exception e) {
             log.error(e.getMessage());
@@ -238,6 +254,9 @@ public class WebServiceImpl implements WebService{
             List<LocationDTO> locationWIFI = wifi.stream().map(wifiLog -> new LocationDTO(wifiLog.getLatitude(), wifiLog.getLongitude(), wifiLog.getTimestamp())).collect(Collectors.toList());
             // 하나의 데이터 타입(위도, 경도, 시간)으로 통일 및 데이터 합치기
             List<LocationDTO> result = Stream.concat(locationWIFI.stream(), locationGPS.stream()).collect(Collectors.toList());
+            for (LocationDTO locationDTO : result) {
+                log.info("location = {}", locationDTO);
+            }
             return new ResponseEntity(result, HttpStatusCode.valueOf(200));
         } catch(Exception e) {
             log.error(e.getMessage());
