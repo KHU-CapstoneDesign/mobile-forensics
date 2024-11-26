@@ -23,7 +23,7 @@ public class GoogleInitializer {
     private ImageAnnotatorClient visionClient;
 
     @PostConstruct
-    public void setupGoogleCredentials() throws IOException {
+    private void setupGoogleCredentials() {
         System.out.println("Credentials Path: " + credentialsPath);
         File file = new File(credentialsPath);
         System.out.println("File Exists: " + file.exists());
@@ -37,6 +37,8 @@ public class GoogleInitializer {
             // Vision API 클라이언트 생성
             visionClient = ImageAnnotatorClient.create(settings);
             log.info("Vision API 클라이언트 초기화 완료");
+            log.info("vision Client = {}", visionClient);
+//            return visionClient;
         } catch(Exception e) {
             throw new RuntimeException("Vision API 클라이언트 초기화 중 오류 발생", e);
         }
@@ -46,6 +48,7 @@ public class GoogleInitializer {
         if (visionClient == null) {
             throw new IllegalStateException("Vision API 클라이언트가 초기화되지 않았습니다");
         }
+//        return setupGoogleCredentials();
         return visionClient;
     }
 }

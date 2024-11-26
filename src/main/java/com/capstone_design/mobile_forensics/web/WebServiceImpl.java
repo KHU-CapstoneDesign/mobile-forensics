@@ -70,44 +70,6 @@ public class WebServiceImpl implements WebService{
         return userData;
     }
 
-    public ResponseEntity<String> sendNotificationStart(){
-        String url = "http://localhost:4000/api/signal?signal=start";
-        RestTemplate restTemplate = new RestTemplate();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Content-Type", "application/json");
-
-        String body = "{ \"message\": \"Data processing started\" }";
-        HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
-
-        log.info("Request = {}", requestEntity);
-
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-
-        log.info("Notification sent to frontend: " + response.getStatusCode());
-        log.info("response message: " + response.getBody());
-        return response;
-    }
-
-    public ResponseEntity<String> sendNotificationEnd(){
-        String url = "http://localhost:4000/api/signal?signal=end";
-        RestTemplate restTemplate = new RestTemplate();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Content-Type", "application/json");
-
-        String body = "{ \"message\": \"Data processing complete\" }";
-        HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
-
-        log.info("Request = {}", requestEntity);
-
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-
-        log.info("Notification sent to frontend: " + response.getStatusCode());
-        log.info("response message: " + response.getBody());
-        return response;
-    }
-
     public ResponseEntity countAllData(Long userId) {
         Optional<UserData> byId = userRepository.findById(userId);
         UserData user = byId.orElseThrow(()-> new RuntimeException("Cannot Find User. Please Rewrite User Data(Location, DateTime)."));
@@ -166,13 +128,13 @@ public class WebServiceImpl implements WebService{
 
     public ResponseEntity getCloudImages(Long userId) throws IOException {
         UserData user = getUser(userId);
-        List<SafeSearchResponse> drive = fileService.analyzeAndRespondImages(user, "drive");
+        List<SafeSearchResponse> drive = fileService.analyzeAndRespondImages(user, "mybox");
         return new ResponseEntity(drive, HttpStatusCode.valueOf(200));
     }
 
     public ResponseEntity getCacheImages(Long userId) throws IOException {
         UserData user = getUser(userId);
-        List<SafeSearchResponse> cache = fileService.analyzeAndRespondImages(user, "cache");
+        List<SafeSearchResponse> cache = fileService.analyzeAndRespondImages(user, "soda");
         return new ResponseEntity(cache, HttpStatusCode.valueOf(200));
     }
 
