@@ -9,9 +9,6 @@ public interface WebService {
     ResponseEntity<UserData> saveUser(UserDTO request);
     UserData getUser(Long userId);
 
-    ResponseEntity<String> sendNotificationStart();
-    ResponseEntity<String> sendNotificationEnd();
-
     ResponseEntity countAllData(Long userId);
 
     ResponseEntity getCameraImages(Long userId) throws IOException;
