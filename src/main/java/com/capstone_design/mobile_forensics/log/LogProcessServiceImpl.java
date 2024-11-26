@@ -208,16 +208,21 @@ public class LogProcessServiceImpl implements LogProcessService {
                     // Date/Time 부분 추출하여 LocalDateTime으로 변환
                     String dateTimeStr = line.split(": ", 2)[1].replace("Z", "");
                     timestamp = LocalDateTime.parse(dateTimeStr, gpsFORMATTER);
-                } else if (line.contains("GPS Latitude")) {
+                } else if (line.contains("GPS Position")) {
+                    // Latitude & Longitude
+                    String all = line.split(": ", 2)[1];
+                    log.info("lat && lng = {}", all);
                     // Latitude 부분 추출
-                    String lat = line.split(": ", 2)[1];
-                    lat.replace("N", "");
-                    latitude = Double.parseDouble(lat);
-                } else if (line.contains("GPS Longitude")) {
-                    // Longitude 부분 추출
-                    String lng = line.split(": ", 2)[1];
-                    lng.replace("E", "");
-                    longitude = Double.parseDouble(lng);
+                    String lat = all.split(", ", 2)[0];
+                    String lng = all.split(", ", 2)[1];
+
+                    String replaced_lat = lat.replace(" N", "");
+                    log.info("lat == {}", replaced_lat);
+                    String replaced_lng = lng.replace(" E", "");
+                    log.info("lng == {}", replaced_lng);
+
+                    latitude = Double.parseDouble(replaced_lat);
+                    longitude = Double.parseDouble(replaced_lng);
                 }
             }
         }
