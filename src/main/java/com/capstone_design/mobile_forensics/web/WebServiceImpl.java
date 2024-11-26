@@ -55,7 +55,7 @@ public class WebServiceImpl implements WebService{
 
             HttpHeaders headers = new HttpHeaders();
             headers.setLocation(URI.create("/api/result/user"));
-            headers.add("Set-Cookie", "userId=" + userId + "; Path=/api/result; HttpOnly");
+            headers.add("Set-Cookie", "userId=" + userId + "; Path=/api/; HttpOnly");
 
             return new ResponseEntity<>(headers, HttpStatusCode.valueOf(303));
         } catch(Exception e) {
@@ -71,7 +71,7 @@ public class WebServiceImpl implements WebService{
     }
 
     public ResponseEntity<String> sendNotificationStart(){
-        String url = "http://localhost/api/signal";
+        String url = "http://localhost:4000/api/signal?signal=start";
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -85,11 +85,12 @@ public class WebServiceImpl implements WebService{
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 
         log.info("Notification sent to frontend: " + response.getStatusCode());
+        log.info("response message: " + response.getBody());
         return response;
     }
 
     public ResponseEntity<String> sendNotificationEnd(){
-        String url = "http://frontend-server.com/api/signal";
+        String url = "http://localhost:4000/api/signal?signal=end";
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -103,6 +104,7 @@ public class WebServiceImpl implements WebService{
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 
         log.info("Notification sent to frontend: " + response.getStatusCode());
+        log.info("response message: " + response.getBody());
         return response;
     }
 
