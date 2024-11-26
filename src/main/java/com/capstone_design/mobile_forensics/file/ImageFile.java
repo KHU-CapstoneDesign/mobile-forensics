@@ -14,7 +14,7 @@ public class ImageFile {
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long imageId;
     private String imageName;
-    @Column(length = 100000)
+    @Column(columnDefinition="LONGBLOB")
     private byte[] imageByte;
     private String type; //camera, trash, soda, drive
     private LocalDateTime timestamp;
