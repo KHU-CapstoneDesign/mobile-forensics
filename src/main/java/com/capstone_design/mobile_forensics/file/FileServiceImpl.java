@@ -5,18 +5,21 @@ import com.capstone_design.mobile_forensics.file.api.SafeSearchResponse;
 import com.capstone_design.mobile_forensics.file.api.SafeSearchService;
 import com.capstone_design.mobile_forensics.log.LogProcessService;
 import com.capstone_design.mobile_forensics.web.UserData;
-import com.capstone_design.mobile_forensics.web.WebService;
 import com.google.cloud.vision.v1.SafeSearchAnnotation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.awt.image.WritableRaster;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -27,29 +30,12 @@ import java.util.List;
 @Slf4j
 public class FileServiceImpl implements FileService{
 
-    @Autowired @Lazy
-    private WebService webService;
     @Autowired
     private LogProcessService logService;
     @Autowired
     private SafeSearchService safeSearchService;
     @Autowired
     private ImageFileRepository imageRepository;
-
-    public ResponseEntity signal(String signal){
-
-        // 파일 전송 시작과 끝 -> 프론트엔드에 알림(POST)
-        if (signal.equalsIgnoreCase("start"))  {
-            log.info("Processing Started.");
-            ResponseEntity<String> response = webService.sendNotificationStart();
-            return response;
-        } else if (signal.equalsIgnoreCase("end")) {
-            log.info("Processing Completed");
-            ResponseEntity<String> response = webService.sendNotificationEnd();
-            return response;
-        }
-        return null;
-    }
 
     public void fileUpload(MultipartFile file, String parentDir) throws IOException {
         String fileName = file.getOriginalFilename();
@@ -62,7 +48,6 @@ public class FileServiceImpl implements FileService{
             case "txt" :
                 ResponseEntity response = logService.parseLogs(file);// 로그파일 처리
                 break;
-            case "jpg" :
             case "jpeg" :
             case "png" :
                 processImageFile(file, parentDir); // 이미지파일 처리
@@ -114,31 +99,57 @@ public class FileServiceImpl implements FileService{
     // 이미지 파일 처리(저장)
     public ResponseEntity processImageFile(MultipartFile file, String parentDir) throws IOException {
         String filename = file.getOriginalFilename();
-        log.info("Processing Image File: " + filename);
+        LocalDateTime timestamp = getTimestamp(filename);
+        String fileType = determineImageType(parentDir);
 
+        BufferedImage resizeImage = resizeImage(file);
         try {
-            byte[] imageBytes = file.getBytes();
-            LocalDateTime timestamp = getTimestamp(filename);
-            String fileType = determineImageType(parentDir);
-
+            byte[] imageBytes = getByteData(resizeImage);
             ImageFile imageFile = new ImageFile(null, file.getOriginalFilename(), imageBytes, fileType, timestamp);
             ImageFile saved = imageRepository.save(imageFile);
             log.info("Saved Image File = {}", saved);
             return new ResponseEntity(HttpStatusCode.valueOf(200));
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Failed to Process Image File", e);
         }
     }
+    private BufferedImage resizeImage(MultipartFile file) throws IOException {
+        BufferedImage originalImage = ImageIO.read(file.getInputStream());
+        try {
+            // Graphics2D로 리사이징
+            BufferedImage resizedImage = new BufferedImage(450, 450, BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics2D = resizedImage.createGraphics();
+            graphics2D.drawImage(originalImage, 0, 0, 450, 450, null);
+            graphics2D.dispose();
+            return resizedImage;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new RuntimeException("Failed to Resizing Image.");
+        }
+    }
+    private byte[] getByteData(BufferedImage image) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(image, "png", stream);
+        } catch(IOException e) {
+            // This *shouldn't* happen with a ByteArrayOutputStream, but if it
+            // somehow does happen, then we don't want to just ignore it
+            throw new RuntimeException(e);
+        }
+        return stream.toByteArray();
+        // ByteArrayOutputStreams don't need to be closed (the documentation says so)
+    }
+    @Override
+    public List<SafeSearchResponse> analyzeAndRespondImages(UserData userData, String parentDir) throws IOException {
 
-
-    public List<SafeSearchResponse> analyzeAndRespondImages(UserData userData, String type) throws IOException {
-        List<ImageFile> imageFiles = imageRepository.findAllWithin30Minutes(userData.getDateTime(), type);
+        List<ImageFile> imageFiles = imageRepository.findAllWithin30Minutes(userData.getDateTime(), parentDir);
 
         List<SafeSearchResponse> responses = new ArrayList<>();
 
         if(!imageFiles.isEmpty()) {
             for (ImageFile imageFile : imageFiles) {
                 SafeSearchAnnotation safeSearchAnnotation = safeSearchService.analyzeImage(imageFile.getImageByte());
+                System.out.println("safeSearchAnnotation = " + safeSearchAnnotation.toString());
                 String base64ImageData = Base64.getEncoder().encodeToString(imageFile.getImageByte());
 
                 SafeSearchResponse response = new SafeSearchResponse(
