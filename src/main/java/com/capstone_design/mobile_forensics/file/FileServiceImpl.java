@@ -49,6 +49,7 @@ public class FileServiceImpl implements FileService{
                 ResponseEntity response = logService.parseLogs(file);// 로그파일 처리
                 break;
             case "jpeg" :
+            case "jpg" :
             case "png" :
                 processImageFile(file, parentDir); // 이미지파일 처리
                 break;
