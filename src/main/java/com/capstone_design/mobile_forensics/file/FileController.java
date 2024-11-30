@@ -15,12 +15,6 @@ public class FileController {
     @Autowired
     private FileService fileService;
 
-    @PostMapping("/signal")
-    public ResponseEntity<String> handleSignal(@RequestParam String signal) {
-        ResponseEntity res = fileService.signal(signal);
-        return res;
-    }
-
     @PostMapping("/upload")
     public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file,
                                                    @RequestParam("parentDir")String parentDir) throws IOException {

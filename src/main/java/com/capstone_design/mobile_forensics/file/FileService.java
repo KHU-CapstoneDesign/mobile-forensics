@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface FileService {
-    ResponseEntity signal(String signal);
     void fileUpload(MultipartFile file, String parentDir) throws IOException;
     String getFileExtension(String fileName);
     LocalDateTime getTimestamp(String fileName);
